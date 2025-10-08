@@ -1,0 +1,30 @@
+paths:
+  /users:
+    post:
+      summary: Sign Up (create new user)
+      security:
+        - cookieAuth: []
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - username
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                username:
+                  type: string
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Bad Request

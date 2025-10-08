@@ -1,0 +1,65 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  init_db:
+    image: postgres:15
+    depends_on:
+      - db
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      PG_SUPERUSER: ${PG_SUPERUSER}
+    entrypoint: ["sh", "-c", "/scripts/init_db.sh"]
+    volumes:
+      - ./scripts:/scripts
+
+  proxy:
+    build: ./social-proxy
+    depends_on:
+      - init_db
+
+  backend:
+    build: ./
+    depends_on:
+      - proxy
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      DB_URL: postgres://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}?sslmode=disable
+    ports:
+      - "8081:8081"
+
+  backend-chat:
+    build: ./social-backend-chat
+    depends_on:
+      - openapi
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+    ports:
+      - "8082:8082"
+
+  frontend:
+    build: ./social-frontend
+    depends_on:
+      - backend
+      - backend-chat
+    environment:
+      BACKEND_PROXY: http://proxy:8080
+
+volumes:
+  db_data:
