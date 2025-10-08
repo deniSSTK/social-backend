@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 	"social-backend/internal/infrastructure/http"
 	"social-backend/internal/infrastructure/logger"
 	"social-backend/scripts"
@@ -15,12 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	runMode := os.Getenv("RUN_MODE")
-	if runMode == "" {
-		panic("Set RUN_MODE env variable")
-	}
-
-	if err := logger.Init(runMode); err != nil {
+	if err := logger.Init(); err != nil {
 		panic(err)
 	}
 

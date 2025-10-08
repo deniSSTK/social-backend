@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"os"
 	"sync"
 
 	"go.uber.org/zap"
@@ -12,11 +13,16 @@ var (
 	once     sync.Once
 )
 
-func Init(env string) error {
+func Init() error {
+	runMode := os.Getenv("RUN_MODE")
+	if runMode == "" {
+		panic("Set RUN_MODE env variable")
+	}
+
 	var err error
 	once.Do(func() {
 		var cfg zap.Config
-		if env == "prod" {
+		if runMode == "prod" {
 			cfg = zap.NewProductionConfig()
 		} else {
 			cfg = zap.NewDevelopmentConfig()
