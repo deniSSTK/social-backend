@@ -2,40 +2,82 @@ package handler
 
 import (
 	"net/http"
+	"social-backend/internal/infrastructure/auth"
 	"social-backend/internal/infrastructure/http/api_dto"
 	"social-backend/internal/usecase"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
-	userUC *usecase.UserUsecase
+	userUC     *usecase.UserUsecase
+	jwtService auth.JWTService
 }
 
-func NewUserHandler(userUC *usecase.UserUsecase) *UserHandler {
-	return &UserHandler{userUC}
+func NewUserHandler(userUC *usecase.UserUsecase, jwtService auth.JWTService) *UserHandler {
+	return &UserHandler{userUC, jwtService}
 }
 
 func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
-	//TODO auth.NewJWTService()
-	//TODO protected := router.Group("/users", middleware.JWTMiddleware(authService))
+	router.POST("/users", h.createUser)
+	router.POST("/users/log-in", h.login)
 
-	group := router.Group("/user")
-
-	group.POST("/", h.createUser)
+	//protected := router.Group("/user", middleware.JWTMiddleware(h.jwtService))
 }
 
 func (h *UserHandler) createUser(c *gin.Context) {
 	var dto api_dto.PostUsersJSONBody
+
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := h.userUC.Create(c, dto); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	userId, err := h.userUC.Create(c, dto)
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
+
+	token, err := h.jwtService.GenerateToken(userId, time.Duration(auth.OneMonth))
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	auth.SetCookie(c, auth.JWTTokenCookie, token, auth.OneMonth)
 
 	c.Status(http.StatusCreated)
+}
+
+func (h *UserHandler) login(c *gin.Context) {
+	var dto api_dto.PostUsersLogInJSONRequestBody
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		HandleError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	userId, err := h.userUC.Login(c, dto)
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	if userId == uuid.Nil {
+		HandleError(c, http.StatusUnauthorized, nil)
+		return
+	}
+
+	token, err := h.jwtService.GenerateToken(userId, time.Duration(auth.OneMonth))
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	auth.SetCookie(c, auth.JWTTokenCookie, token, auth.OneMonth)
+
+	c.Status(http.StatusOK)
 }

@@ -28,3 +28,29 @@ paths:
           description: User created
         '400':
           description: Bad Request
+  /users/log-in:
+    post:
+      summary: Login
+      security:
+        - cookieAuth: []
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - emailOrUsername
+                - password
+              properties:
+                emailOrUsername:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Authenticated
+        '400':
+          description: BadRequest

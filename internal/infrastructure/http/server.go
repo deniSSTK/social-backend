@@ -2,11 +2,12 @@ package http
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"social-backend/internal/infrastructure/auth"
 	"social-backend/internal/infrastructure/db"
 	"social-backend/internal/infrastructure/db/repository"
 	"social-backend/internal/infrastructure/http/handler"
+	"social-backend/internal/infrastructure/logger"
 	"social-backend/internal/usecase"
 
 	"github.com/gin-contrib/cors"
@@ -17,11 +18,20 @@ func StartServer() {
 	dbPool := db.ConnectDB()
 	defer dbPool.Close()
 
+	log := logger.Get().Sugar()
+
+	jwtKey := os.Getenv("JWT_SECRET")
+	if jwtKey == "" {
+		log.Fatal("JWT_SECRET environment variable not set")
+	}
+
+	jwtService := auth.NewJWTService(jwtKey)
+
 	userRepo := repository.NewUserRepository(dbPool)
 
 	userUC := usecase.NewUserUsecase(userRepo)
 
-	userHandler := handler.NewUserHandler(userUC)
+	userHandler := handler.NewUserHandler(userUC, jwtService)
 
 	r := gin.Default()
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"social-backend/internal/infrastructure/http"
 	"social-backend/internal/infrastructure/logger"
 	"social-backend/scripts"
@@ -11,7 +10,7 @@ import (
 
 func main() {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	if err := logger.Init(); err != nil {
