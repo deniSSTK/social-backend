@@ -1,37 +1,27 @@
-version: '3.9'
 services:
   db:
     image: postgres:15
+    container_name: social_db
+    restart: always
     environment:
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
     ports:
       - "5432:5432"
 
-  init_db:
-    image: postgres:15
-    depends_on:
-      - db
-    environment:
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      DB_NAME: ${DB_NAME}
-      PG_SUPERUSER: ${PG_SUPERUSER}
-    entrypoint: ["sh", "-c", "/scripts/init_db.sh"]
-    volumes:
-      - ./scripts:/scripts
-
-  proxy:
-    build: ./social-proxy
-    depends_on:
-      - init_db
+#  proxy:
+#    build: ./social-proxy
+#    depends_on:
+#      - init_db
 
   backend:
     build: ./
     depends_on:
-      - proxy
+      - db
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -40,26 +30,28 @@ services:
       DB_URL: postgres://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}?sslmode=disable
     ports:
       - "8081:8081"
+    command: ["bash", "./scripts/init_db.sh" ]
 
-  backend-chat:
-    build: ./social-backend-chat
-    depends_on:
-      - openapi
-    environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      DB_NAME: ${DB_NAME}
-    ports:
-      - "8082:8082"
+#  backend-chat:
+#    build: ./social-backend-chat
+#    depends_on:
+#      - openapi
+#    environment:
+#      DB_HOST: db
+#      DB_USER: ${DB_USER}
+#      DB_PASS: ${DB_PASS}
+#      DB_NAME: ${DB_NAME}
+#    ports:
+#      - "8082:8082"
 
   frontend:
-    build: ./social-frontend
+    build: ../social-frontend
     depends_on:
       - backend
-      - backend-chat
     environment:
-      BACKEND_PROXY: http://proxy:8080
+      BACKEND_PROXY: http://backend:8080
+    ports:
+      - "5173:5173"
 
 volumes:
-  db_data:
+  pgdata:
