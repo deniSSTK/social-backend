@@ -21,10 +21,12 @@ func NewUserHandler(userUC *usecase.UserUsecase, jwtService auth.JWTService) *Us
 }
 
 func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
-	router.POST("/users", h.createUser)
-	router.POST("/users/log-in", h.login)
+	group := router.Group("/users")
 
-	//protected := router.Group("/users", middleware.JWTMiddleware(h.jwtService))
+	group.POST("", h.createUser)
+	group.POST("/log-in", h.login)
+
+	//protected := group.Group("/", middleware.JWTMiddleware(h.jwtService))
 }
 
 func (h *UserHandler) createUser(c *gin.Context) {
