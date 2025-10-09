@@ -24,7 +24,7 @@ func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.POST("/users", h.createUser)
 	router.POST("/users/log-in", h.login)
 
-	//protected := router.Group("/user", middleware.JWTMiddleware(h.jwtService))
+	//protected := router.Group("/users", middleware.JWTMiddleware(h.jwtService))
 }
 
 func (h *UserHandler) createUser(c *gin.Context) {

@@ -20,7 +20,7 @@ func NewUserRepository(conn *pgxpool.Pool) *UserRepository {
 func (r *UserRepository) Create(ctx context.Context, dto api_dto.PostUsersJSONBody, passwordHash string, userId uuid.UUID) error {
 	_, err := r.conn.Exec(ctx, `
 		INSERT INTO users (id, username, email, password_hash) 
-		VALUES ($1, $2, $3)
+		VALUES ($1, $2, $3, $4)
 	`, userId, dto.Username, dto.Email, passwordHash)
 	return err
 }
