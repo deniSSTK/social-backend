@@ -16,7 +16,7 @@ var (
 func Init() error {
 	runMode := os.Getenv("RUN_MODE")
 	if runMode == "" {
-		panic("Set RUN_MODE env variable")
+		panic("RUN_MODE environment variable not set")
 	}
 
 	var err error

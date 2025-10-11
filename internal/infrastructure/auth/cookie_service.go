@@ -1,17 +1,29 @@
 package auth
 
 import (
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
-func SetCookie(c *gin.Context, cookieName CookieName, CookieValue string, duration int) {
+func SetCookie(c *gin.Context, cookieName CookieName, CookieValue string, duration time.Duration) {
+	isProd := os.Getenv("RUN_MODE") == "prod"
+
+	if isProd {
+		c.SetSameSite(http.SameSiteNoneMode)
+	} else {
+		c.SetSameSite(http.SameSiteLaxMode)
+	}
+
 	c.SetCookie(
 		string(cookieName),
 		CookieValue,
-		duration,
+		int(duration),
 		"/",
 		"",
-		false,
+		isProd,
 		true,
 	)
 }

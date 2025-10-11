@@ -37,7 +37,7 @@ func StartServer() {
 
 	frontendUrl := os.Getenv("FRONTEND_URL")
 	if frontendUrl == "" {
-		log.Fatal("Environment variable FRONTEND_URL is not set")
+		log.Fatal("FRONTEND_URL environment variable not set")
 	}
 
 	r.Use(cors.New(cors.Config{

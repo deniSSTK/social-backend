@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var OneMonth = 30 * 24 * 60 * 60
+var OneMonth = 30 * 24 * time.Hour
 
 type JWTService interface {
 	GenerateToken(userId uuid.UUID, tokenLifetime time.Duration) (string, error)

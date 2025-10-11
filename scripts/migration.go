@@ -19,7 +19,7 @@ func Migrate() {
 
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
-		log.Fatal("DB_URL is not set")
+		log.Fatal("DB_URL environment variable not set")
 	}
 
 	db, err := sql.Open("pgx", dbURL)
