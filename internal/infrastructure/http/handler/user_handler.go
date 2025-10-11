@@ -30,6 +30,7 @@ func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 	protected := group.Group("/", middleware.JWTMiddleware(h.jwtService))
 
 	protected.GET("/auth", h.authCheck)
+	protected.GET("/id/username", h.getUsernameById)
 }
 
 func (h *UserHandler) createUser(c *gin.Context) {
@@ -96,4 +97,16 @@ func (h *UserHandler) authCheck(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
+
+func (h *UserHandler) getUsernameById(c *gin.Context) {
+	userId := context.GetContextUserId(c)
+
+	username, err := h.userUC.GetUsernameById(c, userId)
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"username": username})
 }

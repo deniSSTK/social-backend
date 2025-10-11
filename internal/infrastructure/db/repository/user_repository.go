@@ -36,3 +36,16 @@ func (r *UserRepository) GetPasswordHashByEmailOrUsername(ctx context.Context, d
 	}
 	return targetUser, nil
 }
+
+func (r *UserRepository) GetUsernameById(ctx context.Context, userId uuid.UUID) (string, error) {
+	var username string
+	if err := r.conn.QueryRow(ctx, `
+		SELECT username
+		FROM users
+		WHERE id = $1
+	`, userId).Scan(&username); err != nil {
+		return "", err
+	}
+
+	return username, nil
+}

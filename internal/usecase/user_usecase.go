@@ -44,3 +44,7 @@ func (uc *UserUsecase) Login(ctx context.Context, dto api_dto.PostUsersLogInJSON
 
 	return user.Id, nil
 }
+
+func (uc *UserUsecase) GetUsernameById(ctx context.Context, userId uuid.UUID) (string, error) {
+	return uc.userRepo.GetUsernameById(ctx, userId)
+}
