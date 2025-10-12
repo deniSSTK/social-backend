@@ -32,7 +32,7 @@ func (uc *UserUsecase) Create(ctx context.Context, dto api_dto.PostUsersJSONBody
 	return userId, nil
 }
 
-func (uc *UserUsecase) Login(ctx context.Context, dto api_dto.PostUsersLogInJSONRequestBody) (uuid.UUID, error) {
+func (uc *UserUsecase) Login(ctx context.Context, dto api_dto.PostUsersLogInJSONBody) (uuid.UUID, error) {
 	user, err := uc.userRepo.GetPasswordHashByEmailOrUsername(ctx, dto)
 	if err != nil {
 		return uuid.Nil, err

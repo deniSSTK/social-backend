@@ -25,13 +25,13 @@ func (r *UserRepository) Create(ctx context.Context, dto api_dto.PostUsersJSONBo
 	return err
 }
 
-func (r *UserRepository) GetPasswordHashByEmailOrUsername(ctx context.Context, dto api_dto.PostUsersLogInJSONRequestBody) (user.User, error) {
+func (r *UserRepository) GetPasswordHashByEmailOrUsername(ctx context.Context, dto api_dto.PostUsersLogInJSONBody) (user.User, error) {
 	var targetUser user.User
 	if err := r.conn.QueryRow(ctx, `
-		SELECT (id, password_hash)
+		SELECT id, password_hash
 		FROM users 
 		WHERE email = $1 OR username = $1
-	`, dto.EmailOrUsername).Scan(&targetUser); err != nil {
+	`, dto.EmailOrUsername).Scan(&targetUser.Id, &targetUser.PasswordHash); err != nil {
 		return user.User{}, err
 	}
 	return targetUser, nil

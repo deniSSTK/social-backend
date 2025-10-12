@@ -59,7 +59,7 @@ func (h *UserHandler) createUser(c *gin.Context) {
 }
 
 func (h *UserHandler) login(c *gin.Context) {
-	var dto api_dto.PostUsersLogInJSONRequestBody
+	var dto api_dto.PostUsersLogInJSONBody
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		HandleError(c, http.StatusBadRequest, err)
