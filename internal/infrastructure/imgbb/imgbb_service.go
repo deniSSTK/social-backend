@@ -30,32 +30,6 @@ func NewImgBBService(apiKey string, apiURL string) *ImgBBService {
 	return &ImgBBService{apiKey, apiURL}
 }
 
-func (service *ImgBBService) UploadImages(ctx context.Context, images []io.Reader) ([]image.Image, error) {
-	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(len(images))
-
-	uploadedImages := make([]image.Image, 0, len(images))
-
-	for i, img := range images {
-		i, img := i, img
-		g.Go(func() error {
-			uploaded, err := service.Upload(img)
-			if err != nil {
-				return err
-			}
-
-			uploadedImages[i] = uploaded
-			return nil
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		return nil, err
-	}
-
-	return uploadedImages, nil
-}
-
 func (service *ImgBBService) Upload(targetImage io.Reader) (image.Image, error) {
 	imgBytes, err := io.ReadAll(targetImage)
 	if err != nil {
@@ -99,6 +73,32 @@ func (service *ImgBBService) Upload(targetImage io.Reader) (image.Image, error) 
 	}
 
 	return resultImage, nil
+}
+
+func (service *ImgBBService) UploadImages(ctx context.Context, images []io.Reader) ([]image.Image, error) {
+	g, ctx := errgroup.WithContext(ctx)
+	g.SetLimit(len(images))
+
+	uploadedImages := make([]image.Image, 0, len(images))
+
+	for i, img := range images {
+		i, img := i, img
+		g.Go(func() error {
+			uploaded, err := service.Upload(img)
+			if err != nil {
+				return err
+			}
+
+			uploadedImages[i] = uploaded
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return uploadedImages, nil
 }
 
 func (service *ImgBBService) DeleteImage(deleteUrl string) (bool, error) {

@@ -19,8 +19,8 @@ func NewImageRepository(conn *pgxpool.Pool) *ImageRepository {
 func (r *ImageRepository) InsertTx(ctx context.Context, exec execer.Execer, image image.Image) error {
 	_, err := exec.Exec(ctx, `
 		INSERT INTO images 
-		(url, position, post_id)
-		VALUES ($1, $2, $3)
-	`, image.Url, image.Position, image.PostId)
+		(url, position, post_id, delete_url)
+		VALUES ($1, $2, $3, $4)
+	`, image.Url, image.Position, image.PostId, image.DeleteUrl)
 	return err
 }
