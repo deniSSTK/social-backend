@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"log"
 	"os"
+	"social-backend/internal/infrastructure/errors"
+	"social-backend/internal/infrastructure/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -11,12 +12,12 @@ import (
 func ConnectDB() *pgxpool.Pool {
 	dbUrl := os.Getenv("DB_URL")
 	if dbUrl == "" {
-		log.Fatal("DB_URL environment variable not set")
+		logger.Get().Fatal(errors.EnvironmentVariableNotSet.Error() + "DB_URL")
 	}
 
 	pool, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
-		log.Fatal("Error connecting to database: ", err)
+		logger.Get().Fatal("Error connecting to database: " + err.Error())
 	}
 
 	return pool

@@ -42,5 +42,4 @@ CREATE TABLE IF NOT EXISTS post_hashtags (
                                              hashtag_id UUID REFERENCES hashtags(id) NOT NULL,
                                              position INT,
                                              PRIMARY KEY (post_id, hashtag_id)
-
 );

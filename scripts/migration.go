@@ -6,6 +6,7 @@ import (
 
 	"os"
 	"path/filepath"
+	e "social-backend/internal/infrastructure/errors"
 	"social-backend/internal/infrastructure/logger"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -19,7 +20,7 @@ func Migrate() {
 
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
-		log.Fatal("DB_URL environment variable not set")
+		log.Fatal(e.EnvironmentVariableNotSet.Error() + "DB_URL")
 	}
 
 	db, err := sql.Open("pgx", dbURL)

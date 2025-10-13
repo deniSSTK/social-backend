@@ -6,6 +6,7 @@ import (
 	"social-backend/internal/infrastructure/auth"
 	"social-backend/internal/infrastructure/db"
 	"social-backend/internal/infrastructure/db/repository"
+	"social-backend/internal/infrastructure/errors"
 	"social-backend/internal/infrastructure/http/handler"
 	"social-backend/internal/infrastructure/imgbb"
 	"social-backend/internal/infrastructure/logger"
@@ -21,21 +22,19 @@ func StartServer() {
 
 	log := logger.Get().Sugar()
 
-	//TODO create error "environment variable not set"
-
 	jwtKey := os.Getenv("JWT_SECRET")
 	if jwtKey == "" {
-		log.Fatal("JWT_SECRET environment variable not set")
+		log.Fatal(errors.EnvironmentVariableNotSet.Error() + "JWT_SECRET")
 	}
 
 	imgBBApiKey := os.Getenv("IMGBB_API_KEY")
 	if imgBBApiKey == "" {
-		log.Fatal("IMG_BAPI_KEY environment variable not set")
+		log.Fatal(errors.EnvironmentVariableNotSet.Error() + "IMGBB_API_KEY")
 	}
 
 	imgBBApiUrl := os.Getenv("IMGBB_API_URL")
 	if imgBBApiUrl == "" {
-		log.Fatal("IMGBB_API_URL environment variable not set")
+		log.Fatal(errors.EnvironmentVariableNotSet.Error() + "IMGBB_API_URL")
 	}
 
 	jwtService := auth.NewJWTService(jwtKey)
@@ -58,7 +57,7 @@ func StartServer() {
 
 	frontendUrl := os.Getenv("FRONTEND_URL")
 	if frontendUrl == "" {
-		log.Fatal("FRONTEND_URL environment variable not set")
+		log.Fatal(errors.EnvironmentVariableNotSet.Error() + "FRONTEND_URL")
 	}
 
 	r.Use(cors.New(cors.Config{

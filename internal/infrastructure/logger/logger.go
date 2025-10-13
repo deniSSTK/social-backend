@@ -1,7 +1,9 @@
 package logger
 
 import (
+	"log"
 	"os"
+	e "social-backend/internal/infrastructure/errors"
 	"sync"
 
 	"go.uber.org/zap"
@@ -16,7 +18,7 @@ var (
 func Init() error {
 	runMode := os.Getenv("RUN_MODE")
 	if runMode == "" {
-		panic("RUN_MODE environment variable not set")
+		log.Fatal(e.EnvironmentVariableNotSet.Error() + "RUN_MODE")
 	}
 
 	var err error
