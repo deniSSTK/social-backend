@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 	"social-backend/internal/infrastructure/auth"
-	"social-backend/internal/infrastructure/http/api_dto"
+	"social-backend/internal/infrastructure/dto/request"
 	"social-backend/internal/infrastructure/http/context"
 	"social-backend/internal/infrastructure/http/middleware"
 	"social-backend/internal/usecase"
@@ -34,14 +34,14 @@ func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (h *UserHandler) createUser(c *gin.Context) {
-	var dto api_dto.PostUsersJSONBody
+	var dto request.CreateUser
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		HandleError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	userId, err := h.userUC.Create(c, dto)
+	userId, err := h.userUC.Insert(c, dto)
 	if err != nil {
 		HandleError(c, http.StatusInternalServerError, err)
 		return
@@ -59,7 +59,7 @@ func (h *UserHandler) createUser(c *gin.Context) {
 }
 
 func (h *UserHandler) login(c *gin.Context) {
-	var dto api_dto.PostUsersLogInJSONBody
+	var dto request.LogIn
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		HandleError(c, http.StatusBadRequest, err)

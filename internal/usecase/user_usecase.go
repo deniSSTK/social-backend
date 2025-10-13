@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 	"social-backend/internal/infrastructure/db/repository"
-	"social-backend/internal/infrastructure/http/api_dto"
+	"social-backend/internal/infrastructure/dto/request"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -17,7 +17,7 @@ func NewUserUsecase(userRepo *repository.UserRepository) *UserUsecase {
 	return &UserUsecase{userRepo}
 }
 
-func (uc *UserUsecase) Create(ctx context.Context, dto api_dto.PostUsersJSONBody) (uuid.UUID, error) {
+func (uc *UserUsecase) Insert(ctx context.Context, dto request.CreateUser) (uuid.UUID, error) {
 	hashBytes, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return uuid.Nil, err
@@ -25,14 +25,14 @@ func (uc *UserUsecase) Create(ctx context.Context, dto api_dto.PostUsersJSONBody
 
 	userId := uuid.New()
 
-	if err = uc.userRepo.Create(ctx, dto, string(hashBytes), userId); err != nil {
+	if err = uc.userRepo.Insert(ctx, dto, string(hashBytes), userId); err != nil {
 		return uuid.Nil, err
 	}
 
 	return userId, nil
 }
 
-func (uc *UserUsecase) Login(ctx context.Context, dto api_dto.PostUsersLogInJSONBody) (uuid.UUID, error) {
+func (uc *UserUsecase) Login(ctx context.Context, dto request.LogIn) (uuid.UUID, error) {
 	user, err := uc.userRepo.GetPasswordHashByEmailOrUsername(ctx, dto)
 	if err != nil {
 		return uuid.Nil, err

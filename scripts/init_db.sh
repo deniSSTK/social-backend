@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 

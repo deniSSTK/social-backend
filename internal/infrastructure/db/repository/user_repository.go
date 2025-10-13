@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"social-backend/internal/domain/user"
-	"social-backend/internal/infrastructure/http/api_dto"
+	"social-backend/internal/infrastructure/dto/request"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,7 +17,7 @@ func NewUserRepository(conn *pgxpool.Pool) *UserRepository {
 	return &UserRepository{conn}
 }
 
-func (r *UserRepository) Create(ctx context.Context, dto api_dto.PostUsersJSONBody, passwordHash string, userId uuid.UUID) error {
+func (r *UserRepository) Insert(ctx context.Context, dto request.CreateUser, passwordHash string, userId uuid.UUID) error {
 	_, err := r.conn.Exec(ctx, `
 		INSERT INTO users (id, username, email, password_hash) 
 		VALUES ($1, $2, $3, $4)
@@ -25,7 +25,7 @@ func (r *UserRepository) Create(ctx context.Context, dto api_dto.PostUsersJSONBo
 	return err
 }
 
-func (r *UserRepository) GetPasswordHashByEmailOrUsername(ctx context.Context, dto api_dto.PostUsersLogInJSONBody) (user.User, error) {
+func (r *UserRepository) GetPasswordHashByEmailOrUsername(ctx context.Context, dto request.LogIn) (user.User, error) {
 	var targetUser user.User
 	if err := r.conn.QueryRow(ctx, `
 		SELECT id, password_hash
