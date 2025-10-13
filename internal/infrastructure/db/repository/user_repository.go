@@ -4,6 +4,7 @@ import (
 	"context"
 	"social-backend/internal/domain/user"
 	"social-backend/internal/infrastructure/dto/request"
+	"social-backend/internal/infrastructure/dto/response"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -48,4 +49,32 @@ func (r *UserRepository) GetUsernameById(ctx context.Context, userId uuid.UUID) 
 	}
 
 	return username, nil
+}
+
+func (r *UserRepository) GetUserInfoByName(ctx context.Context, username string) (response.GetUserInfo, error) {
+	var res response.GetUserInfo
+	if err := r.conn.QueryRow(ctx, `
+		SELECT id, icon_url
+		FROM users
+		WHERE username = $1
+	`, username).Scan(&res.Id, &res.IconUrl); err != nil {
+		return response.GetUserInfo{}, err
+	}
+
+	return res, nil
+}
+
+func (r *UserRepository) CheckIfExistsById(ctx context.Context, userId uuid.UUID) (bool, error) {
+	var exists bool
+	if err := r.conn.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM users
+			WHERE id = $1
+		)
+	`, userId).Scan(&exists); err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

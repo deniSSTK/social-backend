@@ -4,6 +4,7 @@ import (
 	"context"
 	"social-backend/internal/infrastructure/db/repository"
 	"social-backend/internal/infrastructure/dto/request"
+	"social-backend/internal/infrastructure/dto/response"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -47,4 +48,8 @@ func (uc *UserUsecase) Login(ctx context.Context, dto request.LogIn) (uuid.UUID,
 
 func (uc *UserUsecase) GetUsernameById(ctx context.Context, userId uuid.UUID) (string, error) {
 	return uc.userRepo.GetUsernameById(ctx, userId)
+}
+
+func (uc *UserUsecase) GetUserInfoByName(ctx context.Context, username string) (response.GetUserInfo, error) {
+	return uc.userRepo.GetUserInfoByName(ctx, username)
 }

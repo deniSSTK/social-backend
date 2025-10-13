@@ -18,8 +18,10 @@ const (
 type ContextParams string
 
 const (
+	ContextParamUserId   ContextParams = "userId"
+	ContextParamUsername ContextParams = "username"
+
 	ContextParamPostId ContextParams = "postId"
-	ContextParamUserId ContextParams = "userId"
 	ContextParamOffset ContextParams = "offset"
 )
 

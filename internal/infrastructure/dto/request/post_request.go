@@ -14,7 +14,7 @@ type InsertPostHashtag struct {
 }
 
 type InsertPost struct {
-	TargetPost post.Post           `json:"targetPost"`
-	Images     []io.Reader         `json:"images"`
-	Hashtags   []InsertPostHashtag `json:"hashtags"`
+	TargetPost post.Post            `json:"targetPost"`
+	Images     []io.Reader          `json:"images"`
+	Hashtags   *[]InsertPostHashtag `json:"hashtags"`
 }

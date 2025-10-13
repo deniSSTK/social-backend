@@ -3,7 +3,9 @@ package handler
 import (
 	"net/http"
 	"social-backend/internal/infrastructure/auth"
+	"social-backend/internal/infrastructure/auth/cookie"
 	"social-backend/internal/infrastructure/dto/request"
+	"social-backend/internal/infrastructure/errors"
 	"social-backend/internal/infrastructure/http/context"
 	"social-backend/internal/infrastructure/http/middleware"
 	"social-backend/internal/usecase"
@@ -13,12 +15,12 @@ import (
 )
 
 type UserHandler struct {
-	userUC     *usecase.UserUsecase
-	jwtService auth.JWTService
+	userUC      *usecase.UserUsecase
+	authService *auth.AuthService
 }
 
-func NewUserHandler(userUC *usecase.UserUsecase, jwtService auth.JWTService) *UserHandler {
-	return &UserHandler{userUC, jwtService}
+func NewUserHandler(userUC *usecase.UserUsecase, authService *auth.AuthService) *UserHandler {
+	return &UserHandler{userUC, authService}
 }
 
 func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
@@ -27,10 +29,11 @@ func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 	group.POST("", h.createUser)
 	group.POST("/log-in", h.login)
 
-	protected := group.Group("/", middleware.JWTMiddleware(h.jwtService))
+	protected := group.Group("/", middleware.AuthMiddleware(h.authService))
 
 	protected.GET("/auth", h.authCheck)
 	protected.GET("/id/username", h.getUsernameById)
+	protected.GET("/info-by/username/:"+string(context.ContextParamUsername), h.getUserInfoByName)
 }
 
 func (h *UserHandler) createUser(c *gin.Context) {
@@ -47,13 +50,13 @@ func (h *UserHandler) createUser(c *gin.Context) {
 		return
 	}
 
-	token, err := h.jwtService.GenerateToken(userId, auth.OneMonth)
+	token, err := h.authService.JwtService.GenerateToken(userId, auth.OneMonth)
 	if err != nil {
 		HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	auth.SetCookie(c, auth.JWTTokenCookie, token, auth.OneMonth)
+	cookie.SetCookie(c, cookie.JWTTokenCookie, token, auth.OneMonth)
 
 	c.Status(http.StatusCreated)
 }
@@ -77,13 +80,13 @@ func (h *UserHandler) login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.jwtService.GenerateToken(userId, auth.OneMonth)
+	token, err := h.authService.JwtService.GenerateToken(userId, auth.OneMonth)
 	if err != nil {
 		HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	auth.SetCookie(c, auth.JWTTokenCookie, token, auth.OneMonth)
+	cookie.SetCookie(c, cookie.JWTTokenCookie, token, auth.OneMonth)
 
 	c.Status(http.StatusOK)
 }
@@ -108,5 +111,21 @@ func (h *UserHandler) getUsernameById(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"username": username})
+	c.JSON(http.StatusOK, username)
+}
+
+func (h *UserHandler) getUserInfoByName(c *gin.Context) {
+	username, exists := c.Params.Get(string(context.ContextParamUsername))
+	if !exists {
+		HandleError(c, http.StatusBadRequest, errors.ContextParamNotFound)
+		return
+	}
+
+	info, err := h.userUC.GetUserInfoByName(c.Request.Context(), username)
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, info)
 }

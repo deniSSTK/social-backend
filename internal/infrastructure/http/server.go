@@ -37,9 +37,6 @@ func StartServer() {
 		log.Fatal(errors.EnvironmentVariableNotSet.Error() + "IMGBB_API_URL")
 	}
 
-	jwtService := auth.NewJWTService(jwtKey)
-	ImgBBService := imgbb.NewImgBBService(imgBBApiUrl, imgBBApiKey)
-
 	baseRepo := repository.NewBaseRepo(dbPool)
 
 	userRepo := repository.NewUserRepository(dbPool)
@@ -47,11 +44,16 @@ func StartServer() {
 	imageRepo := repository.NewImageRepository(dbPool)
 	hashtagRepo := repository.NewHashtagRepository(dbPool)
 
+	jwtService := auth.NewJWTService(jwtKey)
+	userService := auth.NewUserService(userRepo)
+	authServie := auth.NewAuthService(jwtService, userService)
+	ImgBBService := imgbb.NewImgBBService(imgBBApiUrl, imgBBApiKey)
+
 	userUC := usecase.NewUserUsecase(userRepo)
 	postUC := usecase.NewPostUsecase(baseRepo, postRepo, imageRepo, hashtagRepo, ImgBBService)
 
-	userHandler := handler.NewUserHandler(userUC, jwtService)
-	postHandler := handler.NewPostHandler(postUC, jwtService)
+	userHandler := handler.NewUserHandler(userUC, authServie)
+	postHandler := handler.NewPostHandler(postUC, authServie)
 
 	r := gin.Default()
 

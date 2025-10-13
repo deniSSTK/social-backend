@@ -92,8 +92,10 @@ func (uc *PostUsecase) Insert(ctx context.Context, dto request.InsertPost) error
 			}
 		}
 
-		if err = uc.uploadHashtags(ctx, exec, dto.Hashtags, dto.TargetPost.Id); err != nil {
-			return err
+		if dto.Hashtags != nil {
+			if err = uc.uploadHashtags(ctx, exec, *dto.Hashtags, dto.TargetPost.Id); err != nil {
+				return err
+			}
 		}
 
 		return nil

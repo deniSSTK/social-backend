@@ -14,16 +14,16 @@ import (
 )
 
 type PostHandler struct {
-	postUC     *usecase.PostUsecase
-	jwtService auth.JWTService
+	postUC      *usecase.PostUsecase
+	authService *auth.AuthService
 }
 
-func NewPostHandler(postUC *usecase.PostUsecase, jwtService auth.JWTService) *PostHandler {
-	return &PostHandler{postUC, jwtService}
+func NewPostHandler(postUC *usecase.PostUsecase, authService *auth.AuthService) *PostHandler {
+	return &PostHandler{postUC, authService}
 }
 
 func (h *PostHandler) RegisterRoutes(router *gin.RouterGroup) {
-	protected := router.Group("/posts", middleware.JWTMiddleware(h.jwtService))
+	protected := router.Group("/posts", middleware.AuthMiddleware(h.authService))
 
 	protected.GET("/:"+string(context.ContextParamPostId), h.getById)
 	protected.GET("/user/:"+string(context.ContextParamUserId)+"/:"+string(context.ContextParamOffset), h.getByUserId)
@@ -67,7 +67,7 @@ func (h *PostHandler) getById(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"post": post})
+	c.JSON(http.StatusOK, post)
 }
 
 func (h *PostHandler) getByUserId(c *gin.Context) {
@@ -89,5 +89,5 @@ func (h *PostHandler) getByUserId(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"posts": posts})
+	c.JSON(http.StatusOK, posts)
 }
