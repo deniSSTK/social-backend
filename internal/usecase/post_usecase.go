@@ -6,8 +6,10 @@ import (
 	"social-backend/internal/domain/post"
 	"social-backend/internal/infrastructure/db/repository"
 	"social-backend/internal/infrastructure/dto/request"
+	"social-backend/internal/infrastructure/errors"
 	"social-backend/internal/infrastructure/execer"
 	"social-backend/internal/infrastructure/imgbb"
+	"social-backend/internal/infrastructure/logger"
 	"social-backend/internal/infrastructure/tx"
 
 	"github.com/google/uuid"
@@ -40,40 +42,52 @@ func NewPostUsecase(
 }
 
 func (uc *PostUsecase) Insert(ctx context.Context, dto request.InsertPost) error {
-	return tx.WithTxVoid(ctx, uc.baseRepo, func(ctx context.Context, exec pgx.Tx) error {
+	return tx.WithTxVoid(ctx, uc.baseRepo, func(ctx context.Context, exec pgx.Tx) (err error) {
 		var uploadedImages []image.Image
 
 		if len(dto.Images) == 1 {
-			img, err := uc.imgBBService.Upload(dto.Images[0])
-			if err != nil {
-				return err
+			img, uploadErr := uc.imgBBService.Upload(dto.Images[0])
+			if uploadErr != nil {
+				return uploadErr
 			}
-
 			uploadedImages = append(uploadedImages, img)
-		} else {
-			var err error
-
-			uploadedImages, err = uc.imgBBService.UploadImages(ctx, dto.Images)
-			if err != nil {
-				return err
+		} else if len(dto.Images) > 1 {
+			images, uploadErr := uc.imgBBService.UploadImages(ctx, dto.Images)
+			if uploadErr != nil {
+				return uploadErr
 			}
+			uploadedImages = images
 		}
 
-		//TODO defer deleteImages
+		defer func() {
+			if err != nil && len(uploadedImages) > 0 {
+				for _, img := range uploadedImages {
+					success, delErr := uc.imgBBService.DeleteImage(img.DeleteUrl)
+					if delErr != nil {
+						logger.Get().Error(delErr.Error())
+					}
 
-		var err error
+					if !success {
+						logger.Get().Error(errors.ImgBBUDeletingError.Error())
+					}
+				}
+			}
+		}()
+
 		dto.TargetPost.Id, err = uc.postRepo.InsertTx(ctx, exec, dto.TargetPost)
 		if err != nil {
 			return err
 		}
 
-		for i := range len(uploadedImages) {
-			uploadedImages[i-1].PostId = &dto.TargetPost.Id
-			uploadedImages[i-1].Position = &i
+		for i := range uploadedImages {
+			pos := new(int)
+			*pos = i
+			uploadedImages[i].PostId = &dto.TargetPost.Id
+			uploadedImages[i].Position = pos
 		}
 
-		if len(uploadedImages) == 1 {
-			if err = uc.imageRepo.InsertTx(ctx, exec, uploadedImages[0]); err != nil {
+		for _, img := range uploadedImages {
+			if err = uc.imageRepo.InsertTx(ctx, exec, img); err != nil {
 				return err
 			}
 		}
@@ -88,17 +102,17 @@ func (uc *PostUsecase) Insert(ctx context.Context, dto request.InsertPost) error
 
 func (uc *PostUsecase) uploadHashtags(ctx context.Context, exec execer.Execer, hashtags []request.InsertPostHashtag, postId uuid.UUID) error {
 	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(len(hashtags))
+	g.SetLimit(10)
 
 	for _, h := range hashtags {
 		h := h
 		g.Go(func() error {
 			if h.Id == nil {
-				var err error
-				*h.Id, err = uc.hashtagRepo.InsertTx(ctx, exec, h.Text)
-				if err != nil {
-					return err
+				id, insertErr := uc.hashtagRepo.InsertTx(ctx, exec, h.Text)
+				if insertErr != nil {
+					return insertErr
 				}
+				h.Id = &id
 			}
 
 			if err := uc.postRepo.InsertHashtagTx(ctx, exec, post.Hashtag{HashtagId: *h.Id, PostId: postId, Position: h.Position}); err != nil {
@@ -116,6 +130,10 @@ func (uc *PostUsecase) uploadHashtags(ctx context.Context, exec execer.Execer, h
 	return nil
 }
 
-//func (uc *PostUsecase) GetById(ctx context.Context, postId uuid.UUID) (post.Post, error) {}
+func (uc *PostUsecase) GetById(ctx context.Context, postId uuid.UUID) (post.Post, error) {
+	return uc.postRepo.GetById(ctx, postId)
+}
 
-//func (uc *PostUsecase) GetUserPosts(ctx context.Context, postId uuid.UUID) (post.Post, error) {}
+func (uc *PostUsecase) GetUserPosts(ctx context.Context, userId uuid.UUID, offset int) ([]post.Post, error) {
+	return uc.postRepo.GetUserPosts(ctx, userId, offset)
+}

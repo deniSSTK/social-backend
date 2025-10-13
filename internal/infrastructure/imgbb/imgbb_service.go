@@ -77,7 +77,7 @@ func (service *ImgBBService) Upload(targetImage io.Reader) (image.Image, error) 
 
 func (service *ImgBBService) UploadImages(ctx context.Context, images []io.Reader) ([]image.Image, error) {
 	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(len(images))
+	g.SetLimit(5)
 
 	uploadedImages := make([]image.Image, 0, len(images))
 
