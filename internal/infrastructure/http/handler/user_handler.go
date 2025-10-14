@@ -127,5 +127,5 @@ func (h *UserHandler) getUserInfoByName(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, info)
+	HandleETag(c, info)
 }
