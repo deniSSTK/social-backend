@@ -14,7 +14,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"golang.org/x/sync/errgroup"
 )
 
 type PostUsecase struct {
@@ -103,30 +102,22 @@ func (uc *PostUsecase) Insert(ctx context.Context, dto request.InsertPost) error
 }
 
 func (uc *PostUsecase) uploadHashtags(ctx context.Context, exec execer.Execer, hashtags []request.InsertPostHashtag, postId uuid.UUID) error {
-	g, ctx := errgroup.WithContext(ctx)
-	g.SetLimit(10)
-
 	for _, h := range hashtags {
-		h := h
-		g.Go(func() error {
-			if h.Id == nil {
-				id, insertErr := uc.hashtagRepo.InsertTx(ctx, exec, h.Text)
-				if insertErr != nil {
-					return insertErr
-				}
-				h.Id = &id
-			}
-
-			if err := uc.postRepo.InsertHashtagTx(ctx, exec, post.Hashtag{HashtagId: *h.Id, PostId: postId, Position: h.Position}); err != nil {
+		if h.Id == nil {
+			id, err := uc.hashtagRepo.InsertTx(ctx, exec, h.Text)
+			if err != nil {
 				return err
 			}
+			h.Id = &id
+		}
 
-			return nil
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		return err
+		if err := uc.postRepo.InsertHashtagTx(ctx, exec, post.Hashtag{
+			HashtagId: *h.Id,
+			PostId:    postId,
+			Position:  h.Position,
+		}); err != nil {
+			return err
+		}
 	}
 
 	return nil
