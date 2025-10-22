@@ -10,6 +10,7 @@ import (
 	"social-backend/internal/usecase"
 
 	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 )
 
@@ -33,9 +34,25 @@ func (h *PostHandler) RegisterRoutes(router *gin.RouterGroup) {
 
 func (h *PostHandler) createPost(c *gin.Context) {
 	var dto request.InsertPost
-	if err := c.ShouldBindJSON(&dto); err != nil {
+
+	if err := json.Unmarshal([]byte(c.PostForm("targetPost")), &dto.TargetPost); err != nil {
 		HandleError(c, http.StatusBadRequest, err)
 		return
+	}
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		HandleError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	for _, fh := range form.File["images"] {
+		file, openErr := fh.Open()
+		if openErr != nil {
+			HandleError(c, http.StatusInternalServerError, openErr)
+			return
+		}
+		dto.Images = append(dto.Images, file)
 	}
 
 	userId := context.GetContextUserId(c)

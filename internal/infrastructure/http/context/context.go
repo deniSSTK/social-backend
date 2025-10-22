@@ -21,6 +21,8 @@ const (
 	ContextParamUserId   ContextParams = "userId"
 	ContextParamUsername ContextParams = "username"
 
+	ContextParamValue ContextParams = "value"
+
 	ContextParamPostId ContextParams = "postId"
 	ContextParamOffset ContextParams = "offset"
 )

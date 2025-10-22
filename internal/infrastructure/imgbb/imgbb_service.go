@@ -3,6 +3,7 @@ package imgbb
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,7 +18,7 @@ type uploadResponseBody struct {
 	Success bool `json:"success"`
 	Data    struct {
 		URL       string `json:"url"`
-		DeleteUrl string `json:"deleteUrl"`
+		DeleteUrl string `json:"delete_url"`
 	} `json:"data"`
 }
 
@@ -66,6 +67,8 @@ func (service *ImgBBService) Upload(targetImage io.Reader) (image.Image, error) 
 	if !res.Success {
 		return image.Image{}, e.ImgBBUploadingError
 	}
+
+	fmt.Printf("res: %+v\n", res)
 
 	resultImage := image.Image{
 		Url:       res.Data.URL,

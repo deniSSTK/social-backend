@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS post_likes (
 
 CREATE TABLE IF NOT EXISTS hashtags (
                                         id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-                                        text VARCHAR(100)
+                                        name VARCHAR(100) UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS post_hashtags (

@@ -47,13 +47,15 @@ func StartServer() {
 	jwtService := auth.NewJWTService(jwtKey)
 	userService := auth.NewUserService(userRepo)
 	authServie := auth.NewAuthService(jwtService, userService)
-	ImgBBService := imgbb.NewImgBBService(imgBBApiUrl, imgBBApiKey)
+	ImgBBService := imgbb.NewImgBBService(imgBBApiKey, imgBBApiUrl)
 
 	userUC := usecase.NewUserUsecase(userRepo)
 	postUC := usecase.NewPostUsecase(baseRepo, postRepo, imageRepo, hashtagRepo, ImgBBService)
+	hashtagUC := usecase.NewHashtagUsecase(hashtagRepo)
 
 	userHandler := handler.NewUserHandler(userUC, authServie)
 	postHandler := handler.NewPostHandler(postUC, authServie)
+	hashtagHandler := handler.NewHashtagHandler(hashtagUC, authServie)
 
 	r := gin.Default()
 
@@ -73,6 +75,7 @@ func StartServer() {
 
 	userHandler.RegisterRoutes(api)
 	postHandler.RegisterRoutes(api)
+	hashtagHandler.RegisterRoutes(api)
 
 	port := ":8080"
 
