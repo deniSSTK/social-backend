@@ -15,6 +15,7 @@ type Post struct {
 	CommentsCount int       `json:"commentsCount"`
 	CloseFriends  *bool     `json:"closeFriends"`
 	Pinned        *bool     `json:"pinned,omitempty"`
+	FirstImage    string    `json:"firstImage"`
 }
 
 type Comment struct {

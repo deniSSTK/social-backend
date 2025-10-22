@@ -6,7 +6,6 @@ import (
 	"social-backend/internal/infrastructure/execer"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -57,13 +56,21 @@ func (r *PostRepository) GetById(ctx context.Context, postId uuid.UUID) (post.Po
 func (r *PostRepository) GetUserPosts(ctx context.Context, userId uuid.UUID, offset int) ([]post.Post, error) {
 	rows, err := r.conn.Query(ctx, `
 		SELECT
-		    id,
+		    p.id,
 		    description,
 		    author_id,
 		    created_at,
 			close_friends,
-			pinned
-		FROM posts
+			pinned,
+			i.url AS first_image
+		FROM posts p
+		LEFT JOIN LATERAL (
+		    SELECT url
+		    FROM images
+		    WHERE post_id = p.id
+		    ORDER BY position
+		    LIMIT 1
+		) i ON true
 		WHERE author_id = $1
 		ORDER BY created_at DESC
 		LIMIT 10 OFFSET $2
@@ -74,9 +81,22 @@ func (r *PostRepository) GetUserPosts(ctx context.Context, userId uuid.UUID, off
 	}
 	defer rows.Close()
 
-	posts, err := pgx.CollectRows(rows, pgx.RowToStructByName[post.Post])
-	if err != nil {
-		return nil, err
+	var posts []post.Post
+	for rows.Next() {
+		var targetPost post.Post
+		if err = rows.Scan(
+			&targetPost.Id,
+			&targetPost.Description,
+			&targetPost.AuthorId,
+			&targetPost.CreatedAt,
+			&targetPost.CloseFriends,
+			&targetPost.Pinned,
+			&targetPost.FirstImage,
+		); err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, targetPost)
 	}
 
 	return posts, nil
