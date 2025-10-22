@@ -76,7 +76,7 @@ func (h *UserHandler) login(c *gin.Context) {
 	}
 
 	if userId == uuid.Nil {
-		HandleError(c, http.StatusUnauthorized, nil)
+		HandleError(c, http.StatusUnauthorized, errors.ContextUserIdEmpty)
 		return
 	}
 
