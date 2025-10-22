@@ -13,6 +13,11 @@ type GetPostByUserId struct {
 	CloseFriends *bool     `json:"closeFriends"`
 }
 
+type GetPostCountsById struct {
+	LikesCount    int `json:"likesCount"`
+	CommentsCount int `json:"commentsCount"`
+}
+
 //json names are not camel
 
 type GetFeedPostByUserId struct {

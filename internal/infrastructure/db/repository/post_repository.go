@@ -105,3 +105,16 @@ func (r *PostRepository) InsertHashtagTx(ctx context.Context, exec execer.Execer
 	`, hashtag.PostId, hashtag.HashtagId, hashtag.Position)
 	return err
 }
+
+func (r *PostRepository) GetPostCountsById(ctx context.Context, postId uuid.UUID) (response.GetPostCountsById, error) {
+	var res response.GetPostCountsById
+	if err := r.conn.QueryRow(ctx, `
+		SELECT likes_count, comments_count
+		FROM posts
+		WHERE id = $1
+	`, postId).Scan(&res.LikesCount, &res.CommentsCount); err != nil {
+		return response.GetPostCountsById{}, err
+	}
+
+	return res, nil
+}

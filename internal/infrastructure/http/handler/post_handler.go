@@ -27,6 +27,7 @@ func (h *PostHandler) RegisterRoutes(router *gin.RouterGroup) {
 	protected := router.Group("/posts", middleware.AuthMiddleware(h.authService))
 
 	protected.GET("/:"+string(context.ContextParamPostId), h.getById)
+	protected.GET("/counts/:"+string(context.ContextParamPostId), h.getPostCountsById)
 	protected.GET("/user/:"+string(context.ContextParamUserId)+"/:"+string(context.ContextParamOffset), h.getByUserId)
 
 	protected.POST("/", h.createPost)
@@ -107,4 +108,20 @@ func (h *PostHandler) getByUserId(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, posts)
+}
+
+func (h *PostHandler) getPostCountsById(c *gin.Context) {
+	postId, err := context.GetContextParamUUID(c, context.ContextParamPostId)
+	if err != nil {
+		HandleError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := h.postUC.GetPostCountsById(c.Request.Context(), postId)
+	if err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 }
