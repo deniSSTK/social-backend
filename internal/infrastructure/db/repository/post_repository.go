@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"social-backend/internal/domain/post"
+	"social-backend/internal/infrastructure/dto/response"
 	"social-backend/internal/infrastructure/execer"
 
 	"github.com/google/uuid"
@@ -53,13 +54,10 @@ func (r *PostRepository) GetById(ctx context.Context, postId uuid.UUID) (post.Po
 	return targetPost, nil
 }
 
-func (r *PostRepository) GetUserPosts(ctx context.Context, userId uuid.UUID, offset int) ([]post.Post, error) {
+func (r *PostRepository) GetUserPosts(ctx context.Context, userId uuid.UUID, offset int) ([]response.GetPostByUserId, error) {
 	rows, err := r.conn.Query(ctx, `
 		SELECT
 		    p.id,
-		    description,
-		    author_id,
-		    created_at,
 			close_friends,
 			pinned,
 			i.url AS first_image
@@ -81,14 +79,11 @@ func (r *PostRepository) GetUserPosts(ctx context.Context, userId uuid.UUID, off
 	}
 	defer rows.Close()
 
-	var posts []post.Post
+	var posts []response.GetPostByUserId
 	for rows.Next() {
-		var targetPost post.Post
+		var targetPost response.GetPostByUserId
 		if err = rows.Scan(
 			&targetPost.Id,
-			&targetPost.Description,
-			&targetPost.AuthorId,
-			&targetPost.CreatedAt,
 			&targetPost.CloseFriends,
 			&targetPost.Pinned,
 			&targetPost.FirstImage,

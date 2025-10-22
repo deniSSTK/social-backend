@@ -6,6 +6,7 @@ import (
 	"social-backend/internal/domain/post"
 	"social-backend/internal/infrastructure/db/repository"
 	"social-backend/internal/infrastructure/dto/request"
+	"social-backend/internal/infrastructure/dto/response"
 	"social-backend/internal/infrastructure/errors"
 	"social-backend/internal/infrastructure/execer"
 	"social-backend/internal/infrastructure/imgbb"
@@ -127,6 +128,6 @@ func (uc *PostUsecase) GetById(ctx context.Context, postId uuid.UUID) (post.Post
 	return uc.postRepo.GetById(ctx, postId)
 }
 
-func (uc *PostUsecase) GetUserPosts(ctx context.Context, userId uuid.UUID, offset int) ([]post.Post, error) {
+func (uc *PostUsecase) GetUserPosts(ctx context.Context, userId uuid.UUID, offset int) ([]response.GetPostByUserId, error) {
 	return uc.postRepo.GetUserPosts(ctx, userId, offset)
 }

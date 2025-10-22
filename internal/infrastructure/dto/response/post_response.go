@@ -6,6 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type GetPostByUserId struct {
+	Id           uuid.UUID `json:"id"`
+	FirstImage   string    `json:"firstImage"`
+	Pinned       *bool     `json:"pinned"`
+	CloseFriends *bool     `json:"closeFriends"`
+}
+
+//json names are not camel
+
 type GetFeedPostByUserId struct {
 	Id           uuid.UUID   `json:"id"`
 	Description  string      `json:"description"`
