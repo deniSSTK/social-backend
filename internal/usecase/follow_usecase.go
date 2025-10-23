@@ -18,17 +18,23 @@ func NewFollowUsecase(baseRepo *repository.BaseRepo, followRepo *repository.Foll
 	return &FollowUsecase{baseRepo, followRepo}
 }
 
-func (uc *FollowUsecase) Follow(ctx context.Context, userId, followToId uuid.UUID) error {
+func (uc *FollowUsecase) FollowManipulation(ctx context.Context, userId, followToId uuid.UUID, count int) error {
 	return tx.WithTxVoid(ctx, uc.baseRepo, func(ctx context.Context, exec pgx.Tx) (err error) {
-		if err = uc.followRepo.FollowTx(ctx, exec, userId, followToId); err != nil {
+		if count == 1 {
+			if err = uc.followRepo.InsertTx(ctx, exec, userId, followToId); err != nil {
+				return err
+			}
+		} else if count == -1 {
+			if err = uc.followRepo.DeleteTx(ctx, exec, userId, followToId); err != nil {
+				return err
+			}
+		}
+
+		if err = uc.followRepo.UpdateFollowerCountTx(ctx, exec, followToId, count); err != nil {
 			return err
 		}
 
-		if err = uc.followRepo.AddFollowerTx(ctx, exec, followToId); err != nil {
-			return err
-		}
-
-		if err = uc.followRepo.AddFollowingTx(ctx, exec, userId); err != nil {
+		if err = uc.followRepo.UpdateFollowingCountTx(ctx, exec, userId, count); err != nil {
 			return err
 		}
 

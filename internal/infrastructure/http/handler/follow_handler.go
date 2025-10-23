@@ -24,10 +24,12 @@ func NewFollowHandler(followUC *usecase.FollowUsecase, authService *auth.AuthSer
 func (h *FollowHandler) RegisterRoutes(router *gin.RouterGroup) {
 	protected := router.Group("/follow", middleware.AuthMiddleware(h.authService))
 
-	protected.POST("/:"+string(context.ContextParamUserId), h.follow)
+	protected.POST("/:"+string(context.ContextParamUserId), h.followManipulation)
+
+	protected.DELETE("/:"+string(context.ContextParamUserId), h.followManipulation)
 }
 
-func (h *FollowHandler) follow(c *gin.Context) {
+func (h *FollowHandler) followManipulation(c *gin.Context) {
 	userId := context.GetContextUserId(c)
 	if userId == uuid.Nil {
 		HandleError(c, http.StatusUnauthorized, errors.ContextUserIdEmpty)
@@ -40,7 +42,15 @@ func (h *FollowHandler) follow(c *gin.Context) {
 		return
 	}
 
-	if err = h.followUC.Follow(c, userId, followToId); err != nil {
+	var count int
+	switch c.Request.Method {
+	case http.MethodPost:
+		count = 1
+	case http.MethodDelete:
+		count = -1
+	}
+
+	if err = h.followUC.FollowManipulation(c, userId, followToId, count); err != nil {
 		HandleError(c, http.StatusInternalServerError, err)
 		return
 	}

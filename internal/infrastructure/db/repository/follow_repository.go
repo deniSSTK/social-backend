@@ -16,7 +16,7 @@ func NewFollowRepository(conn *pgxpool.Pool) *FollowRepository {
 	return &FollowRepository{conn}
 }
 
-func (r *FollowRepository) FollowTx(ctx context.Context, exec execer.Execer, userId, followToId uuid.UUID) error {
+func (r *FollowRepository) InsertTx(ctx context.Context, exec execer.Execer, userId, followToId uuid.UUID) error {
 	_, err := exec.Exec(ctx, `
 		INSERT INTO followings
 		(follower_id, follow_to_id)
@@ -25,20 +25,28 @@ func (r *FollowRepository) FollowTx(ctx context.Context, exec execer.Execer, use
 	return err
 }
 
-func (r *FollowRepository) AddFollowerTx(ctx context.Context, exec execer.Execer, userId uuid.UUID) error {
+func (r *FollowRepository) UpdateFollowerCountTx(ctx context.Context, exec execer.Execer, userId uuid.UUID, count int) error {
 	_, err := exec.Exec(ctx, `
 		UPDATE users
-		SET followers = followers + 1
-		WHERE id = $1
-	`, userId)
+		SET followers = followers + $1
+		WHERE id = $2
+	`, count, userId)
 	return err
 }
 
-func (r *FollowRepository) AddFollowingTx(ctx context.Context, exec execer.Execer, userId uuid.UUID) error {
+func (r *FollowRepository) UpdateFollowingCountTx(ctx context.Context, exec execer.Execer, userId uuid.UUID, count int) error {
 	_, err := exec.Exec(ctx, `
 		UPDATE users
-		SET followings = followings + 1
-		WHERE id = $1
-	`, userId)
+		SET following = following + $1
+		WHERE id = $2
+	`, count, userId)
+	return err
+}
+
+func (r *FollowRepository) DeleteTx(ctx context.Context, exec execer.Execer, followToId, followerId uuid.UUID) error {
+	_, err := exec.Exec(ctx, `
+		DELETE FROM followings
+		WHERE follow_to_id = $1 AND follower_id = $2
+	`, followToId, followerId)
 	return err
 }
