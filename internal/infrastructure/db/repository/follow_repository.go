@@ -16,12 +16,12 @@ func NewFollowRepository(conn *pgxpool.Pool) *FollowRepository {
 	return &FollowRepository{conn}
 }
 
-func (r *FollowRepository) InsertTx(ctx context.Context, exec execer.Execer, userId, followToId uuid.UUID) error {
+func (r *FollowRepository) InsertTx(ctx context.Context, exec execer.Execer, followerId, followToId uuid.UUID) error {
 	_, err := exec.Exec(ctx, `
 		INSERT INTO followings
 		(follower_id, follow_to_id)
 		VALUES ($1, $2)
-	`, userId, followToId)
+	`, followerId, followToId)
 	return err
 }
 
@@ -43,10 +43,10 @@ func (r *FollowRepository) UpdateFollowingCountTx(ctx context.Context, exec exec
 	return err
 }
 
-func (r *FollowRepository) DeleteTx(ctx context.Context, exec execer.Execer, followToId, followerId uuid.UUID) error {
+func (r *FollowRepository) DeleteTx(ctx context.Context, exec execer.Execer, followerId, followToId uuid.UUID) error {
 	_, err := exec.Exec(ctx, `
 		DELETE FROM followings
-		WHERE follow_to_id = $1 AND follower_id = $2
-	`, followToId, followerId)
+		WHERE follower_id = $1 AND follow_to_id = $2
+	`, followerId, followToId)
 	return err
 }

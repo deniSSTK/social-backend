@@ -51,13 +51,32 @@ func (r *UserRepository) GetUsernameById(ctx context.Context, userId uuid.UUID) 
 	return username, nil
 }
 
-func (r *UserRepository) GetUserInfoByName(ctx context.Context, username string) (response.GetUserInfo, error) {
+func (r *UserRepository) GetUserInfoByName(ctx context.Context, username string, currentUserId uuid.UUID) (response.GetUserInfo, error) {
 	var res response.GetUserInfo
 	if err := r.conn.QueryRow(ctx, `
-		SELECT id, icon_url, description, followers, following, post_count
-		FROM users
+		SELECT 
+		    u.id, 
+		    icon_url, 
+		    description, 
+		    followers, 
+		    following, 
+		    post_count,
+		    EXISTS (
+		        SELECT 1
+		        FROM followings f
+		        WHERE f.follow_to_id = u.id AND f.follower_id = $2
+  		    ) AS if_current_user_followed
+		FROM users u
 		WHERE username = $1
-	`, username).Scan(&res.Id, &res.IconUrl, &res.Description, &res.Followers, &res.Following, &res.PostCount); err != nil {
+	`, username, currentUserId).Scan(
+		&res.Id,
+		&res.IconUrl,
+		&res.Description,
+		&res.Followers,
+		&res.Following,
+		&res.PostCount,
+		&res.IfCurrentUserFollowed,
+	); err != nil {
 		return response.GetUserInfo{}, err
 	}
 

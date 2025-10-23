@@ -131,7 +131,13 @@ func (h *UserHandler) getUserInfoByName(c *gin.Context) {
 		return
 	}
 
-	info, err := h.userUC.GetUserInfoByName(c.Request.Context(), username)
+	userId := context.GetContextUserId(c)
+	if userId == uuid.Nil {
+		HandleError(c, http.StatusUnauthorized, errors.ContextUserIdEmpty)
+		return
+	}
+
+	info, err := h.userUC.GetUserInfoByName(c.Request.Context(), username, userId)
 	if err != nil {
 		HandleError(c, http.StatusInternalServerError, err)
 		return

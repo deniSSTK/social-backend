@@ -50,6 +50,6 @@ func (uc *UserUsecase) GetUsernameById(ctx context.Context, userId uuid.UUID) (s
 	return uc.userRepo.GetUsernameById(ctx, userId)
 }
 
-func (uc *UserUsecase) GetUserInfoByName(ctx context.Context, username string) (response.GetUserInfo, error) {
-	return uc.userRepo.GetUserInfoByName(ctx, username)
+func (uc *UserUsecase) GetUserInfoByName(ctx context.Context, username string, currentUserId uuid.UUID) (response.GetUserInfo, error) {
+	return uc.userRepo.GetUserInfoByName(ctx, username, currentUserId)
 }
