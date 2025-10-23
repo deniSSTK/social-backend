@@ -19,6 +19,10 @@ type UserHandler struct {
 	authService *auth.AuthService
 }
 
+type AuthUser struct {
+	UserId uuid.UUID `json:"userId"`
+}
+
 func NewUserHandler(userUC *usecase.UserUsecase, authService *auth.AuthService) *UserHandler {
 	return &UserHandler{userUC, authService}
 }
@@ -101,7 +105,11 @@ func (h *UserHandler) authCheck(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, userId)
+	user := AuthUser{
+		UserId: userId,
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *UserHandler) getUsernameById(c *gin.Context) {
