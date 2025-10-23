@@ -139,3 +139,23 @@ func (uc *PostUsecase) GetPostCountsById(ctx context.Context, postId uuid.UUID) 
 func (uc *PostUsecase) GetFeedPosts(ctx context.Context, userId uuid.UUID, offset int) ([]response.GetFeedPostByUserId, error) {
 	return uc.postRepo.GetFeedPosts(ctx, userId, offset)
 }
+
+func (uc *PostUsecase) LikePostManipulation(ctx context.Context, postId, userId uuid.UUID, count int) error {
+	return tx.WithTxVoid(ctx, uc.baseRepo, func(ctx context.Context, exec pgx.Tx) (err error) {
+		if count == 1 {
+			if err = uc.postRepo.LikePostTx(ctx, exec, postId, userId); err != nil {
+				return err
+			}
+		} else if count == -1 {
+			if err = uc.postRepo.RemoveLikePostTx(ctx, exec, postId, userId); err != nil {
+				return err
+			}
+		}
+
+		if err = uc.postRepo.UpdatePostLikesCountTx(ctx, exec, count, postId); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}

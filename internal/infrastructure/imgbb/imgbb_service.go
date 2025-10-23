@@ -3,7 +3,6 @@ package imgbb
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -68,8 +67,6 @@ func (service *ImgBBService) Upload(targetImage io.Reader) (image.Image, error) 
 		return image.Image{}, e.ImgBBUploadingError
 	}
 
-	fmt.Printf("res: %+v\n", res)
-
 	resultImage := image.Image{
 		Url:       res.Data.URL,
 		DeleteUrl: res.Data.DeleteUrl,
@@ -82,7 +79,7 @@ func (service *ImgBBService) UploadImages(ctx context.Context, images []io.Reade
 	g, ctx := errgroup.WithContext(ctx)
 	g.SetLimit(5)
 
-	uploadedImages := make([]image.Image, 0, len(images))
+	uploadedImages := make([]image.Image, len(images))
 
 	for i, img := range images {
 		i, img := i, img

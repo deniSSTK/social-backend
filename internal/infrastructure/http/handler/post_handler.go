@@ -32,6 +32,10 @@ func (h *PostHandler) RegisterRoutes(router *gin.RouterGroup) {
 	protected.GET("/counts/:"+string(context.ContextParamPostId), h.getPostCountsById)
 
 	protected.POST("/", h.createPost)
+
+	protected.PATCH("/like/:"+string(context.ContextParamPostId), h.likePostManipulation)
+
+	protected.DELETE("/like/:"+string(context.ContextParamPostId), h.likePostManipulation)
 }
 
 func (h *PostHandler) createPost(c *gin.Context) {
@@ -147,4 +151,33 @@ func (h *PostHandler) getFeedPosts(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, posts)
+}
+
+func (h *PostHandler) likePostManipulation(c *gin.Context) {
+	userId := context.GetContextUserId(c)
+	if userId == uuid.Nil {
+		HandleError(c, http.StatusUnauthorized, errors.ContextUserIdEmpty)
+		return
+	}
+
+	postId, err := context.GetContextParamUUID(c, context.ContextParamPostId)
+	if err != nil {
+		HandleError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	var count int
+	switch c.Request.Method {
+	case http.MethodPatch:
+		count = 1
+	case http.MethodDelete:
+		count = -1
+	}
+
+	if err = h.postUC.LikePostManipulation(c.Request.Context(), postId, userId, count); err != nil {
+		HandleError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

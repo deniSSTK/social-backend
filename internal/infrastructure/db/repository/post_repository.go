@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"social-backend/internal/domain/post"
 	"social-backend/internal/infrastructure/dto/response"
 	"social-backend/internal/infrastructure/execer"
@@ -182,4 +183,30 @@ func (r *PostRepository) GetFeedPosts(ctx context.Context, userId uuid.UUID, off
 	}
 
 	return posts, nil
+}
+
+func (r *PostRepository) LikePostTx(ctx context.Context, exec execer.Execer, postId, userId uuid.UUID) error {
+	fmt.Println("postId"+postId.String(), userId.String())
+	_, err := exec.Exec(ctx, `
+		INSERT INTO post_likes (post_id, author_id)
+		VALUES ($1, $2)
+	`, postId, userId)
+	return err
+}
+
+func (r *PostRepository) RemoveLikePostTx(ctx context.Context, exec execer.Execer, postId, userId uuid.UUID) error {
+	_, err := exec.Exec(ctx, `
+		DELETE FROM post_likes
+		WHERE post_id = $1 AND author_id = $2 
+	`, postId, userId)
+	return err
+}
+
+func (r *PostRepository) UpdatePostLikesCountTx(ctx context.Context, exec execer.Execer, count int, postId uuid.UUID) error {
+	_, err := exec.Exec(ctx, `
+		UPDATE posts
+		SET likes_count = likes_count + $1
+		WHERE id = $2
+	`, count, postId)
+	return err
 }
