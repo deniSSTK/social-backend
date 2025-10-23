@@ -18,14 +18,14 @@ type GetPostCountsById struct {
 	CommentsCount int `json:"commentsCount"`
 }
 
-//json names are not camel
-
 type GetFeedPostByUserId struct {
-	Id           uuid.UUID   `json:"id"`
-	Description  string      `json:"description"`
-	ImagesUrls   []string    `json:"images_urls"`
-	LikeCount    int         `json:"like_count"`
-	CommentCount int         `json:"comment_count"`
-	Author       GetUserInfo `json:"author"`
-	CreatedAt    time.Time   `json:"created_at"`
+	Id                 uuid.UUID   `json:"id"`
+	Description        string      `json:"description"`
+	ImagesUrls         []string    `json:"imagesUrls"`
+	ImagesCount        int         `json:"imagesCount"`
+	LikesCount         int         `json:"likesCount"`
+	CommentsCount      int         `json:"commentsCount"`
+	Author             UserPreview `json:"author"`
+	CreatedAt          time.Time   `json:"createdAt"`
+	IfCurrentUserLiked bool        `json:"ifCurrentUserLiked"`
 }

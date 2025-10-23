@@ -135,3 +135,7 @@ func (uc *PostUsecase) GetUserPosts(ctx context.Context, userId uuid.UUID, offse
 func (uc *PostUsecase) GetPostCountsById(ctx context.Context, postId uuid.UUID) (response.GetPostCountsById, error) {
 	return uc.postRepo.GetPostCountsById(ctx, postId)
 }
+
+func (uc *PostUsecase) GetFeedPosts(ctx context.Context, userId uuid.UUID, offset int) ([]response.GetFeedPostByUserId, error) {
+	return uc.postRepo.GetFeedPosts(ctx, userId, offset)
+}

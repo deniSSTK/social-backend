@@ -118,3 +118,68 @@ func (r *PostRepository) GetPostCountsById(ctx context.Context, postId uuid.UUID
 
 	return res, nil
 }
+
+func (r *PostRepository) GetFeedPosts(ctx context.Context, userId uuid.UUID, offset int) ([]response.GetFeedPostByUserId, error) {
+	rows, err := r.conn.Query(ctx, `
+		SELECT 
+		    p.id,
+		    p.description,
+		    ARRAY (
+		    	SELECT ARRAY_AGG(url order by position)
+		        FROM images
+		    	WHERE post_id = p.id
+		    	LIMIT 3
+		    ) AS images_urls,
+		    (
+		        SELECT 
+		        COUNT(*)
+		        FROM images 
+		            WHERE post_id = p.id
+		    ) AS images_count,
+		    likes_count,
+		    comments_count,
+		    json_build_object (
+		    	'id', u.id,
+		    	'username', u.username,
+		    	'iconUrl', u.icon_url
+		    ) as author,
+		    p.created_at,
+		    EXISTS (
+		        SELECT 1
+		        FROM post_likes pl
+		        WHERE pl.post_id = p.id AND pl.author_id = $1
+		    ) AS if_current_user_liked
+		FROM posts p
+		JOIN users u ON u.id = p.author_id
+		JOIN followings f ON f.follow_to_id = p.author_id
+		WHERE f.follower_id = $1
+		ORDER BY created_at DESC
+		LIMIT 5 OFFSET $2
+	`, userId, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []response.GetFeedPostByUserId
+	for rows.Next() {
+		var targetPost response.GetFeedPostByUserId
+		if err = rows.Scan(
+			&targetPost.Id,
+			&targetPost.Description,
+			&targetPost.ImagesUrls,
+			&targetPost.ImagesCount,
+			&targetPost.LikesCount,
+			&targetPost.CommentsCount,
+			&targetPost.Author,
+			&targetPost.CreatedAt,
+			&targetPost.IfCurrentUserLiked,
+		); err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, targetPost)
+	}
+
+	return posts, nil
+}
