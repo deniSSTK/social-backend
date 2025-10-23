@@ -91,6 +91,8 @@ func (h *UserHandler) login(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// add etag to check if user data was modified
+
 func (h *UserHandler) authCheck(c *gin.Context) {
 	userId := context.GetContextUserId(c)
 
@@ -99,7 +101,7 @@ func (h *UserHandler) authCheck(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, userId)
 }
 
 func (h *UserHandler) getUsernameById(c *gin.Context) {

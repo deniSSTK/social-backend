@@ -27,8 +27,8 @@ func (h *PostHandler) RegisterRoutes(router *gin.RouterGroup) {
 	protected := router.Group("/posts", middleware.AuthMiddleware(h.authService))
 
 	protected.GET("/:"+string(context.ContextParamPostId), h.getById)
-	protected.GET("/counts/:"+string(context.ContextParamPostId), h.getPostCountsById)
 	protected.GET("/user/:"+string(context.ContextParamUserId)+"/:"+string(context.ContextParamOffset), h.getByUserId)
+	protected.GET("/counts/:"+string(context.ContextParamPostId), h.getPostCountsById)
 
 	protected.POST("/", h.createPost)
 }

@@ -54,10 +54,10 @@ func (r *UserRepository) GetUsernameById(ctx context.Context, userId uuid.UUID) 
 func (r *UserRepository) GetUserInfoByName(ctx context.Context, username string) (response.GetUserInfo, error) {
 	var res response.GetUserInfo
 	if err := r.conn.QueryRow(ctx, `
-		SELECT id, icon_url, description
+		SELECT id, icon_url, description, followers, following, post_count
 		FROM users
 		WHERE username = $1
-	`, username).Scan(&res.Id, &res.IconUrl, &res.Description); err != nil {
+	`, username).Scan(&res.Id, &res.IconUrl, &res.Description, &res.Followers, &res.Following, &res.PostCount); err != nil {
 		return response.GetUserInfo{}, err
 	}
 
